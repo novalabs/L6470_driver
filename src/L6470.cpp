@@ -219,10 +219,10 @@ uint32_t status = 0;
 namespace core {
 namespace L6470_driver {
 L6470::L6470(
-   core::hw::SPIDevice&  spi,
-   core::hw::EXTChannel& ext,
-   core::hw::Pad&        stby,
-   core::hw::Pad&        flag
+    core::hw::SPIDevice&  spi,
+    core::hw::EXTChannel& ext,
+    core::hw::Pad&        stby,
+    core::hw::Pad&        flag
 ) : _spi(spi), _ext(ext), _stby(stby), _flag(flag) {}
 
 L6470::~L6470()
@@ -230,291 +230,291 @@ L6470::~L6470()
 
 void
 L6470::transfer(
-   uint16_t n,
-   uint8_t* txbuf,
-   uint8_t* rxbuf
+    uint16_t n,
+    uint8_t* txbuf,
+    uint8_t* rxbuf
 )
 {
-   _spi.acquireBus();
+    _spi.acquireBus();
 
-   for (int i = 0; i < n; i++) {
-      _spi.select();
+    for (int i = 0; i < n; i++) {
+        _spi.select();
 
-      if (!rxbuf) {
-         _spi.send(1, &txbuf[i]);
-      } else if (!txbuf) {
-         _spi.receive(1, &rxbuf[i]);
-      } else {
-         _spi.exchange(1, &txbuf[i], &rxbuf[i]);
-      }
+        if (!rxbuf) {
+            _spi.send(1, &txbuf[i]);
+        } else if (!txbuf) {
+            _spi.receive(1, &rxbuf[i]);
+        } else {
+            _spi.exchange(1, &txbuf[i], &rxbuf[i]);
+        }
 
-      _spi.deselect();
-   }
+        _spi.deselect();
+    }
 
-   _spi.releaseBus();
+    _spi.releaseBus();
 }    // L6470::transfer
 
 uint32_t
 L6470::getParam(
-   uint8_t param
+    uint8_t param
 )
 {
-   uint8_t  txbuf = 0;
-   uint8_t  rxbuf = 0;
-   uint32_t rx    = 0;
+    uint8_t  txbuf = 0;
+    uint8_t  rxbuf = 0;
+    uint32_t rx    = 0;
 
-   _spi.acquireBus();
+    _spi.acquireBus();
 
-   /* Send GetParam operation code to dSPIN */
-   txbuf = (uint8_t)CMD_GET_PARAM | (uint8_t)param;
+    /* Send GetParam operation code to dSPIN */
+    txbuf = (uint8_t)CMD_GET_PARAM | (uint8_t)param;
 
-   _spi.select();
-   _spi.send(1, &txbuf);
-   _spi.deselect();
+    _spi.select();
+    _spi.send(1, &txbuf);
+    _spi.deselect();
 
-   switch (param) {
-     case REG_ABS_POS:
-     case REG_MARK:
-     case REG_SPEED:
-        _spi.select();
-        _spi.receive(1, &rxbuf);
-        _spi.deselect();
+    switch (param) {
+      case REG_ABS_POS:
+      case REG_MARK:
+      case REG_SPEED:
+          _spi.select();
+          _spi.receive(1, &rxbuf);
+          _spi.deselect();
 
-        rx |= rxbuf << 16;
-     case REG_EL_POS:
-     case REG_ACC:
-     case REG_DEC:
-     case REG_MAX_SPEED:
-     case REG_MIN_SPEED:
-     case REG_FS_SPD:
-     case REG_INT_SPD:
-     case REG_CONFIG:
-     case REG_STATUS:
-        _spi.select();
-        _spi.receive(1, &rxbuf);
-        _spi.deselect();
+          rx |= rxbuf << 16;
+      case REG_EL_POS:
+      case REG_ACC:
+      case REG_DEC:
+      case REG_MAX_SPEED:
+      case REG_MIN_SPEED:
+      case REG_FS_SPD:
+      case REG_INT_SPD:
+      case REG_CONFIG:
+      case REG_STATUS:
+          _spi.select();
+          _spi.receive(1, &rxbuf);
+          _spi.deselect();
 
-        rx |= rxbuf << 8;
-     default:
-        _spi.select();
-        _spi.receive(1, &rxbuf);
-        _spi.deselect();
+          rx |= rxbuf << 8;
+      default:
+          _spi.select();
+          _spi.receive(1, &rxbuf);
+          _spi.deselect();
 
-        rx |= rxbuf;
-   }    // switch
+          rx |= rxbuf;
+    }   // switch
 
-   _spi.releaseBus();
+    _spi.releaseBus();
 
-   return rx;
+    return rx;
 }    // L6470::getParam
 
 void
 L6470::setParam(
-   uint8_t  param,
-   uint32_t value
+    uint8_t  param,
+    uint32_t value
 )
 {
-   uint8_t txbuf;
+    uint8_t txbuf;
 
-   _spi.acquireBus();
+    _spi.acquireBus();
 
-   /* Send SetParam operation code to dSPIN */
-   txbuf = (uint8_t)CMD_SET_PARAM | (uint8_t)param;
+    /* Send SetParam operation code to dSPIN */
+    txbuf = (uint8_t)CMD_SET_PARAM | (uint8_t)param;
 
-   _spi.select();
-   _spi.send(1, &txbuf);
-   _spi.deselect();
+    _spi.select();
+    _spi.send(1, &txbuf);
+    _spi.deselect();
 
-   switch (param) {
-     case REG_ABS_POS:
-        ;
-     case REG_MARK:
-        ;
-        /* Send parameter - byte 2 to dSPIN */
-        txbuf = (uint8_t)(value >> 16);
+    switch (param) {
+      case REG_ABS_POS:
+          ;
+      case REG_MARK:
+          ;
+          /* Send parameter - byte 2 to dSPIN */
+          txbuf = (uint8_t)(value >> 16);
 
-        _spi.select();
-        _spi.send(1, &txbuf);
-        _spi.deselect();
-     case REG_EL_POS:
-        ;
-     case REG_ACC:
-        ;
-     case REG_DEC:
-        ;
-     case REG_MAX_SPEED:
-        ;
-     case REG_MIN_SPEED:
-        ;
-     case REG_FS_SPD:
-        ;
+          _spi.select();
+          _spi.send(1, &txbuf);
+          _spi.deselect();
+      case REG_EL_POS:
+          ;
+      case REG_ACC:
+          ;
+      case REG_DEC:
+          ;
+      case REG_MAX_SPEED:
+          ;
+      case REG_MIN_SPEED:
+          ;
+      case REG_FS_SPD:
+          ;
 #if defined(L6470)
-     case REG_INT_SPD:
-        ;
+      case REG_INT_SPD:
+          ;
 #endif /* defined(L6470) */
-     case REG_CONFIG:
-        ;
-     case REG_STATUS:
-        txbuf = (uint8_t)(value >> 8);
+      case REG_CONFIG:
+          ;
+      case REG_STATUS:
+          txbuf = (uint8_t)(value >> 8);
 
-        _spi.select();
-        _spi.send(1, &txbuf);
-        _spi.deselect();
-     default:
-        txbuf = (uint8_t)(value);
+          _spi.select();
+          _spi.send(1, &txbuf);
+          _spi.deselect();
+      default:
+          txbuf = (uint8_t)(value);
 
-        _spi.select();
-        _spi.send(1, &txbuf);
-        _spi.deselect();
-   }    // switch
+          _spi.select();
+          _spi.send(1, &txbuf);
+          _spi.deselect();
+    }   // switch
 
-   _spi.releaseBus();
+    _spi.releaseBus();
 }    // L6470::setParam
 
 uint16_t
 L6470::getStatus()
 {
-   uint8_t txbuf = 0;
-   uint8_t rxbuf[2];
+    uint8_t txbuf = 0;
+    uint8_t rxbuf[2];
 
-   _spi.acquireBus();
+    _spi.acquireBus();
 
-   /* Send GetParam operation code to dSPIN */
-   txbuf = (uint8_t)CMD_GET_STATUS;
+    /* Send GetParam operation code to dSPIN */
+    txbuf = (uint8_t)CMD_GET_STATUS;
 
-   _spi.select();
-   _spi.send(1, &txbuf);
-   _spi.deselect();
+    _spi.select();
+    _spi.send(1, &txbuf);
+    _spi.deselect();
 
 
-   _spi.select();
-   _spi.receive(1, &rxbuf[0]);
-   _spi.deselect();
+    _spi.select();
+    _spi.receive(1, &rxbuf[0]);
+    _spi.deselect();
 
-   _spi.select();
-   _spi.receive(1, &rxbuf[1]);
-   _spi.deselect();
+    _spi.select();
+    _spi.receive(1, &rxbuf[1]);
+    _spi.deselect();
 
-   _spi.releaseBus();
+    _spi.releaseBus();
 
-   return rxbuf[0] << 8 | rxbuf[1];
+    return rxbuf[0] << 8 | rxbuf[1];
 }    // L6470::getStatus
 
 void
 L6470::run(
-   int32_t speed
+    int32_t speed
 )
 {
-   uint8_t txbuf[4];
+    uint8_t txbuf[4];
 
-   if (speed >= 0) {
-      txbuf[0] = (uint8_t)CMD_RUN | 1;
-   } else {
-      txbuf[0] = (uint8_t)CMD_RUN;
-      speed    = -speed;
-   }
+    if (speed >= 0) {
+        txbuf[0] = (uint8_t)CMD_RUN | 1;
+    } else {
+        txbuf[0] = (uint8_t)CMD_RUN;
+        speed    = -speed;
+    }
 
-   txbuf[1] = speed >> 16;
-   txbuf[2] = speed >> 8;
-   txbuf[3] = speed;
+    txbuf[1] = speed >> 16;
+    txbuf[2] = speed >> 8;
+    txbuf[3] = speed;
 
-   transfer(4, txbuf, NULL);
+    transfer(4, txbuf, NULL);
 }
 
 void
 L6470::move(
-   int32_t steps
+    int32_t steps
 )
 {
-   uint8_t txbuf[4];
+    uint8_t txbuf[4];
 
-   if (steps >= 0) {
-      txbuf[0] = (uint8_t)CMD_MOVE | 1;
-   } else {
-      txbuf[0] = (uint8_t)CMD_MOVE;
-      steps    = -steps;
-   }
+    if (steps >= 0) {
+        txbuf[0] = (uint8_t)CMD_MOVE | 1;
+    } else {
+        txbuf[0] = (uint8_t)CMD_MOVE;
+        steps    = -steps;
+    }
 
-   txbuf[1] = steps >> 16;
-   txbuf[2] = steps >> 8;
-   txbuf[3] = steps;
+    txbuf[1] = steps >> 16;
+    txbuf[2] = steps >> 8;
+    txbuf[3] = steps;
 
-   transfer(4, txbuf, NULL);
+    transfer(4, txbuf, NULL);
 }
 
 void
 L6470::moveto(
-   int32_t position
+    int32_t position
 )
 {
-   uint8_t txbuf[4];
+    uint8_t txbuf[4];
 
-   if (position >= 0) {
-      txbuf[0] = (uint8_t)CMD_GOTO_DIR | 1;
-   } else {
-      txbuf[0] = (uint8_t)CMD_GOTO_DIR;
-      position = -position;
-   }
+    if (position >= 0) {
+        txbuf[0] = (uint8_t)CMD_GOTO_DIR | 1;
+    } else {
+        txbuf[0] = (uint8_t)CMD_GOTO_DIR;
+        position = -position;
+    }
 
-   txbuf[1] = position >> 16;
-   txbuf[2] = position >> 8;
-   txbuf[3] = position;
+    txbuf[1] = position >> 16;
+    txbuf[2] = position >> 8;
+    txbuf[3] = position;
 
-   transfer(4, txbuf, NULL);
+    transfer(4, txbuf, NULL);
 }
 
 void
 L6470::resetPosition()
 {
-   uint8_t txbuf = CMD_RESET_POS;
+    uint8_t txbuf = CMD_RESET_POS;
 
-   transfer(1, &txbuf, NULL);
+    transfer(1, &txbuf, NULL);
 }
 
 bool
 L6470::probe()
 {
-   _stby.set();
-   core::os::Thread::sleep(core::os::Time::ms(5));
-   _stby.clear();
-   core::os::Thread::sleep(core::os::Time::ms(5));
-   _stby.set();
-   core::os::Thread::sleep(core::os::Time::ms(5));
+    _stby.set();
+    core::os::Thread::sleep(core::os::Time::ms(5));
+    _stby.clear();
+    core::os::Thread::sleep(core::os::Time::ms(5));
+    _stby.set();
+    core::os::Thread::sleep(core::os::Time::ms(5));
 
-   status = getStatus();
+    status = getStatus();
 
-   uint32_t tmp = getParam(REG_CONFIG);
+    uint32_t tmp = getParam(REG_CONFIG);
 
-   if (tmp != 0x2e88) {
-      return false;
-   }
+    if (tmp != 0x2e88) {
+        return false;
+    }
 
-   setParam(REG_STEP_MODE, !SYNC_EN | STEP_SEL_1_128 | SYNC_SEL_1);
-   setParam(REG_MAX_SPEED, (unsigned long int)std::ceil(1000 * .065536));
-   setParam(REG_FS_SPD, (50 * .065536) - .5);
-   setParam(REG_ACC, 0x0ff);
-   setParam(REG_DEC, 0x0ff);
-   setParam(REG_OCD_TH, OCD_TH_2250mA);
-   setParam(REG_CONFIG, CONFIG_PWM_DIV_1 | CONFIG_PWM_MUL_2 | CONFIG_SR_180V_us | CONFIG_OC_SD_DISABLE | CONFIG_VS_COMP_DISABLE | CONFIG_SW_HARD_STOP | CONFIG_INT_16MHZ);
+    setParam(REG_STEP_MODE, !SYNC_EN | STEP_SEL_1_128 | SYNC_SEL_1);
+    setParam(REG_MAX_SPEED, (unsigned long int)std::ceil(1000 * .065536));
+    setParam(REG_FS_SPD, (50 * .065536) - .5);
+    setParam(REG_ACC, 0x0ff);
+    setParam(REG_DEC, 0x0ff);
+    setParam(REG_OCD_TH, OCD_TH_2250mA);
+    setParam(REG_CONFIG, CONFIG_PWM_DIV_1 | CONFIG_PWM_MUL_2 | CONFIG_SR_180V_us | CONFIG_OC_SD_DISABLE | CONFIG_VS_COMP_DISABLE | CONFIG_SW_HARD_STOP | CONFIG_INT_16MHZ);
 #if 1
-   setParam(REG_KVAL_HOLD, 53);
-   setParam(REG_KVAL_ACC, 53);
-   setParam(REG_KVAL_DEC, 53);
-   setParam(REG_KVAL_RUN, 53);
-   setParam(REG_INT_SPD, 7417);
-   setParam(REG_ST_SLP, 34);
-   setParam(REG_FN_SLP_ACC, 34);
-   setParam(REG_FN_SLP_DEC, 34);
+    setParam(REG_KVAL_HOLD, 53);
+    setParam(REG_KVAL_ACC, 53);
+    setParam(REG_KVAL_DEC, 53);
+    setParam(REG_KVAL_RUN, 53);
+    setParam(REG_INT_SPD, 7417);
+    setParam(REG_ST_SLP, 34);
+    setParam(REG_FN_SLP_ACC, 34);
+    setParam(REG_FN_SLP_DEC, 34);
 #endif
 
-   core::os::Thread::sleep(core::os::Time::ms(5));
-   tmp = getParam(REG_CONFIG);
-   core::os::Thread::sleep(core::os::Time::ms(5));
-   status = getStatus();
-   core::os::Thread::sleep(core::os::Time::ms(5));
-   status = getStatus();
-   core::os::Thread::sleep(core::os::Time::ms(5));
-   return true;
+    core::os::Thread::sleep(core::os::Time::ms(5));
+    tmp = getParam(REG_CONFIG);
+    core::os::Thread::sleep(core::os::Time::ms(5));
+    status = getStatus();
+    core::os::Thread::sleep(core::os::Time::ms(5));
+    status = getStatus();
+    core::os::Thread::sleep(core::os::Time::ms(5));
+    return true;
 }    // L6470::probe
 }
 }
